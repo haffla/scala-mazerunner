@@ -26,9 +26,9 @@ object MazeRunner {
   def main(args: Array[String]) = {
     val maze = createMaze(new File(".").getCanonicalPath + "/src/main/resources/maze.txt")
     if(maze.nonEmpty) {
-      val entrance = findStart(maze, Position(0, 0), List(Position(0,0)))
-      if(entrance.nonEmpty) {
-        val result = findExit(maze, entrance.head, entrance)
+      val entrance = findStart(maze, Position(0, 0))
+      if(inMaze(maze, entrance)) {
+        val result = findExit(maze, entrance, List(entrance))
         result match {
           case Some(x) => printSolution(maze, x)
           case None => println("No exit found. You are trapped.")
@@ -52,31 +52,27 @@ object MazeRunner {
       print("\n")
     }
   }
-
-  def findStart(maze: Maze, position: Position, visited: List[Position]): List[Position] = {
-    if (maze(position.column)(position.row).start) {
-      List(position)
-    }
-    else {
-      val nextPositions: List[Position] = List(position.north, position.east, position.south, position.west) filter (x =>
-        !visited.contains(x) && isAccessible(maze, x))
-      nextPositions.flatMap { notYetVisitedPosition =>
-        findStart(maze, notYetVisitedPosition, position :: visited)
+  def findStart(maze: Maze, position: Position): Position = {
+    for (a <- maze.indices) {
+      for (b <- maze(a).indices) {
+        if (maze(a)(b).start) return Position(a, b)
       }
     }
+    Position(-1, -1)
   }
 
-  private def isAccessible(maze: Maze, position: Position): Boolean =
-    indexInBoundaries(maze, position) &&
+  def isAccessible(maze: Maze, position: Position): Boolean =
+    inMaze(maze, position) &&
       ( maze(position.column)(position.row).free || maze(position.column)(position.row).start )
 
-  private def indexInBoundaries(maze: Maze, position: Position): Boolean =
+  def inMaze(maze: Maze, position: Position): Boolean =
     position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
   def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Option[List[Position]] = {
     if (isExit(pos, maze)) Some(pos :: walkedSoFar)
     else {
-      val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x => isAccessible(maze, x) && !walkedSoFar.contains(x))
+      val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
+        isAccessible(maze, x) && !walkedSoFar.contains(x))
       val ways = posList.flatMap { x =>
         findExit(maze, x, x::walkedSoFar)
       }
