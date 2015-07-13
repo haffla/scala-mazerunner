@@ -1,4 +1,5 @@
 import java.io.File
+import pl.project13.scala.rainbow._
 
 object MazeRunner {
 
@@ -41,9 +42,10 @@ object MazeRunner {
   def printSolution(maze:Maze, sol: List[Position]):Unit = {
     for (a <- maze.indices) {
       for (b <- maze(a).indices) {
-        if(sol.contains(Position(a,b))) print("^")
+        if(sol.contains(Position(a,b)) && !maze(a)(b).start) print {"*".green}
         else {
           if(maze(a)(b).free) print(" ")
+            else if(maze(a)(b).start) print {"?".red}
           else print("#")
         }
       }
