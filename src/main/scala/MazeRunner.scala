@@ -30,14 +30,8 @@ object MazeRunner {
     if(maze.nonEmpty) {
       val entrance = findStart(maze, Position(0, 0))
       if(inMaze(maze, entrance)) {
-        val result = findExit(maze, entrance, List(entrance))
-        result match {
-          case Some(x) => printSolution(maze, x)
-          case None => println("No exit found. You are trapped.")
-        }
-      }
-      else println("No entrance found!")
-
+        findExit(maze, entrance, List(entrance))
+      } else println("No entrance found!")
     } else println("No maze found!")
   }
 
@@ -70,22 +64,18 @@ object MazeRunner {
   def inMaze(maze: Maze, position: Position): Boolean =
     position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
-  def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Option[List[Position]] = {
-    if (isExit(pos, maze)) {
+  def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Unit = {
+    if(isExit(pos, maze)) {
       println("Found")
       found = true
-      Some(pos :: walkedSoFar)
     }
     else {
       if(!found) {
         val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
           isAccessible(maze, x) && !walkedSoFar.contains(x))
-        val ways = posList.flatMap { x =>
-          findExit(maze, x, x::walkedSoFar)
-        }
-        getSolution(maze, ways)
+        posList.foreach(x => findExit(maze, x, x::walkedSoFar))
       }
-      else Some(walkedSoFar)
+      else printSolution(maze, walkedSoFar)
 
     }
   }
