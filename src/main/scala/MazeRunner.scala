@@ -30,7 +30,9 @@ object MazeRunner {
     if(maze.nonEmpty) {
       val entrance = findStart(maze, Position(0, 0))
       if(inMaze(maze, entrance)) {
+        val now = System.currentTimeMillis()
         findExit(maze, entrance, List(entrance))
+        println("Found in " + (System.currentTimeMillis() - now) + "ms")
       } else println("No entrance found!")
     } else println("No maze found!")
   }
@@ -68,15 +70,12 @@ object MazeRunner {
     if(isExit(pos, maze)) {
       println("Found")
       found = true
+      printSolution(maze, walkedSoFar)
     }
-    else {
-      if(!found) {
-        val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
-          isAccessible(maze, x) && !walkedSoFar.contains(x))
-        posList.foreach(x => findExit(maze, x, x::walkedSoFar))
-      }
-      else printSolution(maze, walkedSoFar)
-
+    else if(!found) {
+      val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
+        isAccessible(maze, x) && !walkedSoFar.contains(x))
+      posList.foreach(x => findExit(maze, x, x::walkedSoFar))
     }
   }
 
