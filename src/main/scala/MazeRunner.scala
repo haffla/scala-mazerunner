@@ -3,6 +3,8 @@ import pl.project13.scala.rainbow._
 
 object MazeRunner {
 
+  var found = false
+
   case class Cell(free: Boolean, start: Boolean)
 
   case class Position(column: Int, row: Int) {
@@ -69,14 +71,22 @@ object MazeRunner {
     position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
   def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Option[List[Position]] = {
-    if (isExit(pos, maze)) Some(pos :: walkedSoFar)
+    if (isExit(pos, maze)) {
+      println("Found")
+      found = true
+      Some(pos :: walkedSoFar)
+    }
     else {
-      val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
-        isAccessible(maze, x) && !walkedSoFar.contains(x))
-      val ways = posList.flatMap { x =>
-        findExit(maze, x, x::walkedSoFar)
+      if(!found) {
+        val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
+          isAccessible(maze, x) && !walkedSoFar.contains(x))
+        val ways = posList.flatMap { x =>
+          findExit(maze, x, x::walkedSoFar)
+        }
+        getSolution(maze, ways)
       }
-      getSolution(maze, ways)
+      else Some(walkedSoFar)
+
     }
   }
 
