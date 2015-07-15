@@ -79,11 +79,6 @@ object MazeRunner {
     }
   }
 
-  def getSolution(maze:Maze, ways: List[List[Position]]):Option[List[Position]] = {
-    val winner = ways.filter(way => isExit(way.head, maze))
-    winner.headOption
-  }
-
   def createMaze(filePath: String): Maze = {
     try {
       (for (column <- io.Source.fromFile(filePath, "UTF-8").getLines().toList)
