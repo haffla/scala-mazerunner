@@ -1,5 +1,5 @@
 import java.io.File
-import java.util.concurrent.{Executors, ExecutorService}
+import java.util.concurrent.{RejectedExecutionException, Executors, ExecutorService}
 import pl.project13.scala.rainbow._
 
 object MazeRunner {
@@ -76,21 +76,34 @@ object MazeRunner {
     else if(!found) {
       val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
         isAccessible(maze, x) && !walkedSoFar.contains(x))
-      posList.foreach(x =>
-        pool.execute(
-          new Runnable {
-            override def run(): Unit = findExit(maze, x, x::walkedSoFar)
+      if(posList.length > 1) {
+        posList.foreach(x =>
+          try {
+            pool.execute(
+              new Runnable {
+                override def run(): Unit = findExit(maze, x, x::walkedSoFar)
+              }
+            )
+          } catch {
+            case re: RejectedExecutionException => log("Pool has been shut down. This means some other thread has already found the exit.")
+            case e: Exception => log("Something terrible must have happened!")
           }
+
         )
-      )
+      } else if(posList.nonEmpty) findExit(maze, posList(0), posList(0)::walkedSoFar)
+
     }
   }
 
   def fin(maze:Maze, walkedSoFar: List[Position]) = {
     found = true
+    pool.shutdownNow()
     println(Thread.currentThread().getName + " has found the exit.")
     printSolution(maze, walkedSoFar)
-    System.exit(1)
+  }
+
+  def log(msg: String) = synchronized {
+    println(msg)
   }
 
   def createMaze(filePath: String): Maze = {
