@@ -1,7 +1,11 @@
 import java.io.File
+import java.util.concurrent.{Executors, ExecutorService}
 import pl.project13.scala.rainbow._
 
 object MazeRunner {
+
+  val coreCount = Runtime.getRuntime().availableProcessors()
+  val pool: ExecutorService = Executors.newFixedThreadPool(coreCount)
 
   var found = false
 
@@ -30,9 +34,9 @@ object MazeRunner {
     if(maze.nonEmpty) {
       val entrance = findStart(maze, Position(0, 0))
       if(inMaze(maze, entrance)) {
+        println("Looking for an exit using " + coreCount + " threads.")
         val now = System.currentTimeMillis()
         findExit(maze, entrance, List(entrance))
-        println("Found in " + (System.currentTimeMillis() - now) + "ms")
       } else println("No entrance found!")
     } else println("No maze found!")
   }
@@ -50,6 +54,7 @@ object MazeRunner {
       print("\n")
     }
   }
+
   def findStart(maze: Maze, position: Position): Position = {
     for (a <- maze.indices) {
       for (b <- maze(a).indices) {
@@ -67,21 +72,25 @@ object MazeRunner {
     position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
   def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Unit = {
-    if(isExit(pos, maze)) {
-      println("Found")
-      found = true
-      printSolution(maze, walkedSoFar)
-    }
+    if(isExit(pos, maze) && !found) fin(maze,walkedSoFar)
     else if(!found) {
       val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
         isAccessible(maze, x) && !walkedSoFar.contains(x))
-      posList.foreach(x => findExit(maze, x, x::walkedSoFar))
+      posList.foreach(x =>
+        pool.execute(
+          new Runnable {
+            override def run(): Unit = findExit(maze, x, x::walkedSoFar)
+          }
+        )
+      )
     }
   }
 
-  def getSolution(maze:Maze, ways: List[List[Position]]):Option[List[Position]] = {
-    val winner = ways.filter(way => isExit(way.head, maze))
-    winner.headOption
+  def fin(maze:Maze, walkedSoFar: List[Position]) = {
+    found = true
+    println(Thread.currentThread().getName + " has found the exit.")
+    printSolution(maze, walkedSoFar)
+    System.exit(1)
   }
 
   def createMaze(filePath: String): Maze = {
