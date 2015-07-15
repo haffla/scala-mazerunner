@@ -4,7 +4,7 @@ import pl.project13.scala.rainbow._
 
 object MazeRunner {
 
-  val coreCount = Runtime.getRuntime().availableProcessors()
+  val coreCount = Runtime.getRuntime.availableProcessors
   val pool: ExecutorService = Executors.newFixedThreadPool(coreCount)
 
   var found = false
@@ -35,8 +35,10 @@ object MazeRunner {
       val entrance = findStart(maze, Position(0, 0))
       if(inMaze(maze, entrance)) {
         println("Looking for an exit using " + coreCount + " threads.")
-        val now = System.currentTimeMillis()
+        val startTime = System.currentTimeMillis()
         findExit(maze, entrance, List(entrance))
+        val end = System.currentTimeMillis()
+        println("Took " + (end-startTime) + "ms")
       } else println("No entrance found!")
     } else println("No maze found!")
   }
@@ -88,9 +90,8 @@ object MazeRunner {
             case re: RejectedExecutionException => log("Pool has been shut down. This means some other thread has already found the exit.")
             case e: Exception => log("Something terrible must have happened!")
           }
-
         )
-      } else if(posList.nonEmpty) findExit(maze, posList(0), posList(0)::walkedSoFar)
+      } else if(posList.nonEmpty) findExit(maze, posList.head, posList.head::walkedSoFar)
 
     }
   }
