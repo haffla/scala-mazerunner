@@ -41,19 +41,12 @@ object MazeRunner {
       || pos.row == lab.head.length - 1)
   }
 
-  def printSolution(maze:Maze, sol: List[Position]):Unit = {
-    for (a <- maze.indices) {
-      for (b <- maze(a).indices) {
-        if(sol.contains(Position(a,b)) && !maze(a)(b).start) print {"*".green}
-        else {
-          if(maze(a)(b).free) print(" ")
-            else if(maze(a)(b).start) print {"?".red}
-          else print("#")
-        }
-      }
-      print("\n")
-    }
-  }
+  def isAccessible(maze: Maze, position: Position): Boolean =
+    inMaze(maze, position) &&
+      ( maze(position.column)(position.row).free || maze(position.column)(position.row).start )
+
+  def inMaze(maze: Maze, position: Position): Boolean =
+    position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
   def findStart(maze: Maze): Position = {
     for (x <- maze.indices) {
@@ -63,13 +56,6 @@ object MazeRunner {
     }
     Position(-1, -1)
   }
-
-  def isAccessible(maze: Maze, position: Position): Boolean =
-    inMaze(maze, position) &&
-      ( maze(position.column)(position.row).free || maze(position.column)(position.row).start )
-
-  def inMaze(maze: Maze, position: Position): Boolean =
-    position.column >= 0 && position.row >= 0 && position.column < maze.size && position.row < maze(position.column).size
 
   def findExit(maze: Maze, pos: Position, walkedSoFar: List[Position]): Unit = {
     if(isExit(pos, maze) && !found) fin(maze,walkedSoFar)
@@ -89,13 +75,25 @@ object MazeRunner {
               )
             } catch {
               case re: RejectedExecutionException => log("Pool has been shut down. This means some other thread has already found the exit.")
-              case _ => log("Something terrible must have happened!")
+              case _:Throwable => log("Something terrible must have happened!")
             }
           )
         }
       }
+    }
+  }
 
-
+  def printSolution(maze:Maze, sol: List[Position]):Unit = {
+    for (a <- maze.indices) {
+      for (b <- maze(a).indices) {
+        if(sol.contains(Position(a,b)) && !maze(a)(b).start) print {"*".green}
+        else {
+          if(maze(a)(b).free) print(" ")
+          else if(maze(a)(b).start) print {"?".red}
+          else print("#")
+        }
+      }
+      print("\n")
     }
   }
 
