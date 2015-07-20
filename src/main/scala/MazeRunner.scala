@@ -98,7 +98,7 @@ object MazeRunner {
 
   def fin(maze:Maze, walkedSoFar: List[Position]) = {
     found = true
-    //pool.shutdownNow()
+    pool.shutdownNow()
     println(Thread.currentThread().getName + " has found the exit.")
     printSolution(maze, walkedSoFar)
   }
