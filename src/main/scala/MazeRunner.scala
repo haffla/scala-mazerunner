@@ -63,8 +63,6 @@ object MazeRunner {
       val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
         isAccessible(maze, x) && !walkedSoFar.contains(x))
       if(posList.nonEmpty) {
-        findExit(maze, posList.head, posList.head::walkedSoFar)
-
         if(posList.length > 1) {
           posList.tail.foreach(x =>
             try {
@@ -79,6 +77,7 @@ object MazeRunner {
             }
           )
         }
+        findExit(maze, posList.head, posList.head::walkedSoFar)
       }
     }
   }
@@ -99,7 +98,7 @@ object MazeRunner {
 
   def fin(maze:Maze, walkedSoFar: List[Position]) = {
     found = true
-    pool.shutdownNow()
+    //pool.shutdownNow()
     println(Thread.currentThread().getName + " has found the exit.")
     printSolution(maze, walkedSoFar)
   }
