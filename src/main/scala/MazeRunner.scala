@@ -6,10 +6,10 @@ object MazeRunner {
 
   val coreCount = Runtime.getRuntime.availableProcessors
   val pool: ExecutorService = Executors.newFixedThreadPool(coreCount)
-
   var found = false
 
   case class Cell(free: Boolean, start: Boolean)
+  type Maze = Seq[Seq[Cell]]
 
   case class Position(column: Int, row: Int) {
     override def toString = "(" + column + " | " + row + ")"
@@ -18,16 +18,6 @@ object MazeRunner {
     def west = Position(column, row - 1)
     def east = Position(column, row + 1)
   }
-
-  def isExit(pos: Position, lab: Maze): Boolean = {
-    val cell = lab(pos.column)(pos.row)
-    cell.free && (pos.column == 0
-      || pos.column == lab.length - 1
-      || pos.row == 0
-      || pos.row == lab.head.length - 1)
-  }
-
-  type Maze = Seq[Seq[Cell]]
 
   def main(args: Array[String]) = {
     val maze = createMaze(new File(".").getCanonicalPath + "/src/main/resources/maze.txt")
@@ -41,6 +31,14 @@ object MazeRunner {
         println("Took " + (end-startTime) + "ms")
       } else println("No entrance found!")
     } else println("No maze found!")
+  }
+
+  def isExit(pos: Position, lab: Maze): Boolean = {
+    val cell = lab(pos.column)(pos.row)
+    cell.free && (pos.column == 0
+      || pos.column == lab.length - 1
+      || pos.row == 0
+      || pos.row == lab.head.length - 1)
   }
 
   def printSolution(maze:Maze, sol: List[Position]):Unit = {
@@ -78,20 +76,25 @@ object MazeRunner {
     else if(!found) {
       val posList = List(pos.north, pos.south, pos.west, pos.east).filter(x =>
         isAccessible(maze, x) && !walkedSoFar.contains(x))
-      if(posList.length > 1) {
-        posList.foreach(x =>
-          try {
-            pool.execute(
-              new Runnable {
-                override def run(): Unit = findExit(maze, x, x::walkedSoFar)
-              }
-            )
-          } catch {
-            case re: RejectedExecutionException => log("Pool has been shut down. This means some other thread has already found the exit.")
-            case e: Exception => log("Something terrible must have happened!")
-          }
-        )
-      } else if(posList.nonEmpty) findExit(maze, posList.head, posList.head::walkedSoFar)
+      if(posList.nonEmpty) {
+        findExit(maze, posList.head, posList.head::walkedSoFar)
+
+        if(posList.length > 1) {
+          posList.tail.foreach(x =>
+            try {
+              pool.execute(
+                new Runnable {
+                  override def run(): Unit = findExit(maze, x, x::walkedSoFar)
+                }
+              )
+            } catch {
+              case re: RejectedExecutionException => log("Pool has been shut down. This means some other thread has already found the exit.")
+              case _ => log("Something terrible must have happened!")
+            }
+          )
+        }
+      }
+
 
     }
   }
