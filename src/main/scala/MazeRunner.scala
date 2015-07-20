@@ -32,7 +32,7 @@ object MazeRunner {
   def main(args: Array[String]) = {
     val maze = createMaze(new File(".").getCanonicalPath + "/src/main/resources/maze.txt")
     if(maze.nonEmpty) {
-      val entrance = findStart(maze, Position(0, 0))
+      val entrance = findStart(maze)
       if(inMaze(maze, entrance)) {
         println("Looking for an exit using " + coreCount + " threads.")
         val startTime = System.currentTimeMillis()
@@ -57,10 +57,10 @@ object MazeRunner {
     }
   }
 
-  def findStart(maze: Maze, position: Position): Position = {
-    for (a <- maze.indices) {
-      for (b <- maze(a).indices) {
-        if (maze(a)(b).start) return Position(a, b)
+  def findStart(maze: Maze): Position = {
+    for (x <- maze.indices) {
+      for (y <- maze(x).indices) {
+        if (maze(x)(y).start) return Position(x, y)
       }
     }
     Position(-1, -1)
